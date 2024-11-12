@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Photography Session Booking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="date"],
+        input[type="time"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .session-packages {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .package-option {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .loader {
+            display: none;
+            padding: 10px;
+            margin: 10px 0;
+            background: #f0f0f0;
+            text-align: center;
+        }
+        
+        .status-message {
+            padding: 10px;
+            margin: 10px 0;
+            display: none;
+            border-radius: 4px;
+        }
+        
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button[type="submit"]:disabled {
+            background-color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <form id="photographyBookingForm">
+        <!-- Client Information -->
+        <div class="form-section">
+            <h3>Client Information</h3>
+            <div class="form-group">
+                <label for="name">Full Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone Number:</label>
+                <input type="tel" id="phone" name="phone" required>
+            </div>
+        </div>
+
+        <!-- Session Details -->
+        <div class="form-section">
+            <h3>Session Details</h3>
+            <div class="form-group">
+                <label for="sessionType">Session Type:</label>
+                <select id="sessionType" name="sessionType" required>
+                    <option value="">Select a session type</option>
+                    <option value="portrait">Portrait Session</option>
+                    <option value="family">Family Session</option>
+                    <option value="newborn">Newborn Session</option>
+                    <option value="wedding">Wedding Photography</option>
+                    <option value="engagement">Engagement Session</option>
+                    <option value="event">Event Photography</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="package">Package Selection:</label>
+                <div class="session-packages">
+                    <div class="package-option">
+                        <input type="radio" id="basicPackage" name="package" value="basic" required>
+                        <label for="basicPackage">Basic: 1 hour - $200</label>
+                    </div>
+                    <div class="package-option">
+                        <input type="radio" id="standardPackage" name="package" value="standard">
+                        <label for="standardPackage">Standard: 2 hours - $350</label>
+                    </div>
+                    <div class="package-option">
+                        <input type="radio" id="premiumPackage" name="package" value="premium">
+                        <label for="premiumPackage">Premium: 3 hours - $500</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="preferredDate">Preferred Date:</label>
+                <input type="date" id="preferredDate" name="preferredDate" required>
+            </div>
+
+            <div class="form-group">
+                <label for="alternateDate">Alternate Date:</label>
+                <input type="date" id="alternateDate" name="alternateDate">
+            </div>
+
+            <div class="form-group">
+                <label for="preferredTime">Preferred Time:</label>
+                <input type="time" id="preferredTime" name="preferredTime" required>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Session Location:</label>
+                <select id="location" name="location" required>
+                    <option value="">Select location type</option>
+                    <option value="studio">Studio Session</option>
+                    <option value="outdoor">Outdoor Location</option>
+                    <option value="client">Client's Location</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="locationDetails">Location Details/Address:</label>
+                <textarea id="locationDetails" name="locationDetails" rows="3"></textarea>
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="form-section">
+            <h3>Additional Information</h3>
+            <div class="form-group">
+                <label for="numberOfPeople">Number of People in Session:</label>
+                <input type="number" id="numberOfPeople" name="numberOfPeople" min="1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="specialRequests">Special Requests or Notes:</label>
+                <textarea id="specialRequests" name="specialRequests" rows="4"></textarea>
+            </div>
+        </div>
+
+        <button type="submit">Book Session</button>
+    </form>
+    
+    <div id="loader" class="loader">Processing your booking request...</div>
+    <div id="statusMessage" class="status-message"></div>
+
+    <script>
+        const config = {
+            // Replace these URLs with your actual Make.com webhook endpoints
+            bookingWebhook: 'https://hook.make.com/your-booking-webhook',
+            invoiceWebhook: 'https://hook.make.com/your-invoice-webhook'
+        };
+
+        const packagePrices = {
+            'basic': 200,
+            'standard': 350,
+            'premium': 500
+        };
+
+        async function callWebhook(url, data) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to submit to ${url}`);
+            }
+            
+            return response.json();
+        }
+
+        function showStatus(message, isError = false) {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = message;
+            statusElement.style.display = 'block';
+            statusElement.className = 'status-message ' + (isError ? 'error' : 'success');
+        }
+
+        document.getElementById('photographyBookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loader = document.getElementById('loader');
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            
+            loader.style.display = 'block';
+            submitButton.disabled = true;
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            // Add package price to the data
+            data.packagePrice = packagePrices[data.package];
+            
+            try {
+                // First webhook: Process booking
+                await callWebhook(config.bookingWebhook, {
+                    ...data,
+                    type: 'session_booking'
+                });
+                
+                // Second webhook: Trigger invoice
+                await callWebhook(config.invoiceWebhook, {
+                    ...data,
+                    type: 'invoice_request',
+                    amount: data.packagePrice
+                });
+                
+                showStatus('Booking request submitted successfully! Check your email for confirmation and invoice details.');
+                e.target.reset();
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('Failed to process your booking request. Please try again or contact us directly.', true);
+            } finally {
+                loader.style.display = 'none';
+                submitButton.disabled = false;
+            }
+        });
+
+        // Disable past dates in date inputs
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('preferredDate').min = today;
+        document.getElementById('alternateDate').min = today;
+    </script>
+</body>
+</html>
